@@ -1,0 +1,12 @@
+process.env.NODE_ENV = 'test';
+process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
+process.env.JWT_SECRET = 'test-secret-test-secret-test-secret-1234';
+process.env.ANTHROPIC_API_KEY = 'sk-ant-test-key';
+process.env.STRIPE_SECRET_KEY = 'sk_test_dummy';
+process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_secret';
+process.env.TWILIO_ACCOUNT_SID = 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+process.env.TWILIO_AUTH_TOKEN = 'test-auth-token';
+process.env.PAYROLL_ENCRYPTION_KEY = 'a'.repeat(64);
+process.env.PAYROLL_SIGNING_SECRET = 'test-signing-secret';
+process.env.PUBLIC_BASE_URL = 'http://localhost:3000';
+process.env.FRONTEND_URL = 'http://localhost:5173';

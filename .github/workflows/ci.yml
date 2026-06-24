@@ -1,0 +1,66 @@
+name: CI & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check for stray console.log statements
+        run: |
+          if grep -rn "console\.log" backend/src --include="*.js"; then
+            echo "::error::Remove console.log from backend/src (use the pino logger)"
+            exit 1
+          fi
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm install
+
+      - name: Run backend tests
+        working-directory: backend
+        run: npm test
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm install --omit=dev
+
+      - name: Run database migrations
+        run: node backend/scripts/migrate.js
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_SSL: "true"
+
+      # Wire these to your hosts once the deploy hooks exist:
+      # - name: Deploy backend (Railway deploy hook)
+      #   run: curl -fsS -X POST "${{ secrets.RAILWAY_DEPLOY_HOOK_URL }}"
+      # - name: Deploy frontend (Vercel deploy hook)
+      #   run: curl -fsS -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"

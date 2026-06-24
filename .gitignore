@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+*.log
+logs/
+
+# Environment & secrets — never commit
+.env
+.env.*
+!.env.example
+
+.DS_Store

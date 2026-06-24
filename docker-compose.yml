@@ -1,0 +1,43 @@
+# Local development stack: Postgres + backend (migrations run on boot).
+# Copy backend/.env.example to backend/.env first; the values below override
+# the database settings so the backend talks to the bundled Postgres.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: saas_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d saas_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/saas_db
+      DATABASE_SSL: "false"
+      MIGRATIONS_DIR: /database/migrations
+      JWT_SECRET: dev-only-secret-change-me-0123456789abcdef
+      PAYROLL_USE_MOCK: "true"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./database:/database:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "node scripts/migrate.js && node server.js"
+
+volumes:
+  pgdata:

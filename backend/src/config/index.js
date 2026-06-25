@@ -16,9 +16,15 @@ const warnings = [];
 
 // Hard requirements — the app cannot run safely without these.
 const required = ['DATABASE_URL', 'JWT_SECRET'];
-// Required in production because their localhost defaults are wrong there and
-// would break cookies, CORS, redirects, and webhook signature checks.
-const requiredInProduction = ['FRONTEND_URL', 'PUBLIC_BASE_URL'];
+// Strongly recommended in production: their localhost defaults are wrong there.
+// Warned (not fatal) so the first deploy can boot before you have the URLs —
+// fill them in once the frontend/backend domains exist.
+const productionRecommended = {
+  FRONTEND_URL:
+    'CORS origin + auth cookies — the deployed frontend cannot sign in until this is its URL (using localhost fallback)',
+  PUBLIC_BASE_URL:
+    'absolute URLs + Twilio webhook signature checks (using localhost fallback)',
+};
 // Optional integrations — missing means that feature is inactive, not a crash.
 const optionalIntegrations = {
   ANTHROPIC_API_KEY: 'AI call analysis, payroll review, and website generation',
@@ -45,8 +51,8 @@ if (!['strict', 'lax', 'none'].includes(process.env.COOKIE_SAMESITE || 'strict')
 }
 
 if (env === 'production') {
-  for (const key of requiredInProduction) {
-    if (!process.env[key]) fail(`${key} is required in production`);
+  for (const [key, why] of Object.entries(productionRecommended)) {
+    if (!process.env[key]) warnings.push(`${key} is not set — ${why}.`);
   }
   for (const [key, feature] of Object.entries(optionalIntegrations)) {
     if (!process.env[key]) warnings.push(`${key} is not set — ${feature} is disabled until you add it.`);
